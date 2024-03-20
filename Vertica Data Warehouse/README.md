@@ -32,6 +32,6 @@ project_root/
 
 ## Analysis and Queries
 
-- Staging Data Analysis: [Link to Staging Data Analysis](staging_data_analysis.md)
-- DDS Data Analysis: [Link to DDS Data Analysis](dds_data_analysis.md)
+- Staging Data Analysis: [Link to Staging Data Analysis](https://github.com/TenebrisX/Data-Engineering-Projects/blob/main/Vertica%20Data%20Warehouse/staging_data_analysis.md)
+- DDS Data Analysis: [Link to DDS Data Analysis](https://github.com/TenebrisX/Data-Engineering-Projects/blob/main/Vertica%20Data%20Warehouse/dds_data_analysis.md)
 
