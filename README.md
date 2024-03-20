@@ -3,7 +3,7 @@
 
 # Data Engineering Projects 
 
-This repository showcases my work in data engineering and data analysis, demonstrating the skills and techniques used to transform raw data into valuable insights.
+This repository showcases my work in data engineering.
 
 ## Table of Contents
 * [Projects](#projects)
