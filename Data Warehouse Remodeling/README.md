@@ -17,7 +17,7 @@ The input data consists of a PostgreSQL table named `shipping` with various attr
 
 ## Input Data Structure
 
-![](https://github.com/TenebrisX/de-project-sprint-2/blob/main/old_schema.png)
+![](https://github.com/TenebrisX/Data-Engineering-Projects/blob/main/Data%20Warehouse%20Remodeling/old_schema.png)
 
 The `shipping` table includes the following columns:
 - `ID`
@@ -44,7 +44,7 @@ The `shipping` table includes the following columns:
 
 ## Output Data
 
-![](https://github.com/TenebrisX/de-project-sprint-2/blob/main/new_schema.png)
+![](https://github.com/TenebrisX/Data-Engineering-Projects/blob/main/Data%20Warehouse%20Remodeling/new_schema.png)
 
 The output data consists of several tables and a view:
 
