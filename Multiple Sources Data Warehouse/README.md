@@ -43,5 +43,5 @@ This project involves enhancing existing data warehouse by adding a new data sou
 
 ## Documentation
 
->> [Documentation](https://github.com/TenebrisX/de-project-sprint-5/tree/main/documentation)
+>> [Documentation](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Multiple%20Sources%20Data%20Warehouse/documentation)
 Include all necessary documentation.
