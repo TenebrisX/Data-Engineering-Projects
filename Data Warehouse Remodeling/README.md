@@ -42,7 +42,6 @@ The `shipping` table includes the following columns:
 - `shipping_country_base_rate`
 - `vendor_agreement_description`
 
-the data is here [shipping_data.csv](https://github.com/TenebrisX/Datawarehouse-remodeling-project/blob/main/shipping_data.csv)
 ## Output Data
 
 ![](https://github.com/TenebrisX/de-project-sprint-2/blob/main/new_schema.png)
