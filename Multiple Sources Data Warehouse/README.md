@@ -1,37 +1,47 @@
-# Проект 5-го спринта
+# Airflow - MongoDB - AWS S3 - PostgreSQL ETL Data Warehouse Project
 
-### Описание
-Репозиторий предназначен для сдачи проекта 5-го спринта
+## Project Overview
 
-### Как работать с репозиторием
-1. В вашем GitHub-аккаунте автоматически создастся репозиторий `de-project-sprint-5` после того, как вы привяжете свой GitHub-аккаунт на Платформе.
-2. Скопируйте репозиторий на свой локальный компьютер, в качестве пароля укажите ваш `Access Token` (получить нужно на странице [Personal Access Tokens](https://github.com/settings/tokens)):
-	* `git clone https://github.com/{{ username }}/de-project-sprint-5.git`
-3. Перейдите в директорию с проектом: 
-	* `cd de-project-sprint-5`
-4. Выполните проект и сохраните получившийся код в локальном репозитории:
-	* `git add .`
-	* `git commit -m 'my best commit'`
-5. Обновите репозиторий в вашем GutHub-аккаунте:
-	* `git push origin main`
+This project involves enhancing existing data warehouse by adding a new data source and data mart. The goal is to build a data mart for calculating payments to couriers based on their performance. The data from the new source needs to be integrated with the existing data in the warehouse.
 
-### Структура репозитория
-- `/src/dags`
+### Project Tasks
 
-### Как запустить контейнер
-Запустите локально команду:
+1. **Data Integration:**
+   - Study possible data sources, their internal data models, and the technologies used to extract data.
+   - Design a multi-layered Data Warehouse (DWH) model, detailing each data layer.
+   - Implement ETL processes to transform and move data from sources to final data layers.
 
-```
-docker run \
--d \
--p 3000:3000 \
--p 3002:3002 \
--p 15432:5432 \
-cr.yandex/crp1r8pht0n0gl25aug1/de-pg-cr-af:latest
-```
+2. **Courier Payments Data Mart:**
+   - Build a data mart for calculating payments to couriers.
+   - Include the following fields in the data mart:
+     - `id`: Record identifier.
+     - `courier_id`: ID of the courier receiving payment.
+     - `courier_name`: Full name of the courier.
+     - `settlement_year`: Reporting year.
+     - `settlement_month`: Reporting month (1 for January, 12 for December).
+     - `orders_count`: Number of orders for the period (month).
+     - `orders_total_sum`: Total cost of orders.
+     - `rate_avg`: Average courier rating based on user reviews.
+     - `order_processing_fee`: Amount retained by the company for order processing (calculated as `orders_total_sum * 0.25`).
+     - `courier_order_sum`: Amount to be paid to the courier for delivered orders (dependent on rating).
+     - `courier_tips_sum`: Sum of tips left by users for the courier.
+     - `courier_reward_sum`: Total amount to be paid to the courier (calculated as `courier_order_sum + courier_tips_sum * 0.95`).
 
-После того как запустится контейнер, вам будут доступны:
-- Airflow
-	- `localhost:3000/airflow`
-- БД
-	- `jovyan:jovyan@localhost:15432/de`
+3. **Rating-based Payment Rules:**
+   - Define rules for calculating the percentage of payment to the courier based on their average rating (`r`):
+     - `r < 4`: 5% of the order amount, but not less than 100$.
+     - `4 <= r < 4.5`: 7% of the order amount, but not less than 150$.
+     - `4.5 <= r < 4.9`: 8% of the order amount, but not less than 175$.
+     - `4.9 <= r`: 10% of the order amount, but not less than 200$.
+
+4. **Integration with Courier Service API:**
+   - Fetch courier service data from the API.
+   - Merge this data with the existing order subsystem data in the warehouse.
+
+5. **Reporting:**
+   - Generate reports based on order dates, considering cases where orders made at night might be delivered the next day.
+
+## Documentation
+
+>> [Documentation](https://github.com/TenebrisX/de-project-sprint-5/tree/main/documentation)
+Include all necessary documentation.
