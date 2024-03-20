@@ -11,9 +11,37 @@ This repository showcases my work in data engineering.
 
 ## Projects
 
-* **Project 1: [Bank Marketing Data Preparation](./Cleaning-Bank-Marketing-Campaign-Data)**
+* **Project: [Bank Marketing Data Preparation](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Cleaning%20Bank%20Marketing%20Campaign%20Data)**
    * This project cleans and prepares data from a bank's marketing campaign, making it ready for import to a relational database.
    * Python (Pandas, Matplotlib, Numpy)
+* **Project: [Data Warehouse Remodeling Project](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Data%20Warehouse%20Remodeling)**
+   * This project involves processing and transforming shipping-related data from the shipping table into several derived tables and a view for analytical purposes.
+   * PostgreSQL
+* **Project: [RFM Customer Segmentation](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/RFM%20Analysis)**
+   * This project aims to create a Data Mart for RFM Customer Segmentation, providing valuable insights into customer behavior and spending patterns.
+   * PostgreSQL
+* **Project: [Airflow ETL Pipelines for Sales Mart and Customer Retention](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Apache%20Airflow%20ETL%20Remodeling)**
+   * This repository contains Apache Airflow DAGs for ETL pipelines designed to manage the update process for tables in a sales data mart and compute customer retention metrics. The pipelines engage with an external API for report generation and retrieval, handle file uploads from S3, and execute data transformations to update both staging and mart tables.
+   * PostgreSQL
+   * AWS S3
+   * Apache Airflow
+   * Python
+   * Docker
+* **Project: [Multiple Sources Data Warehouse](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Multiple%20Sources%20Data%20Warehouse)**
+   * This project involves enhancing existing data warehouse by adding a new data source and data mart. The goal is to build a data mart for calculating payments to couriers based on their performance. The data from the new source needs to be integrated with the existing data in the warehouse.
+   * PostgreSQL
+   * MongoDB
+   * AWS S3
+   * Apache Airflow
+   * Python
+   * Docker
+* **Project: [DataVault ETL Project](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Vertica%20Data%20Warehouse)**
+   * This project involves the extraction, transformation, and loading (ETL) of data from AWS S3 to a Vertica database. The ETL pipeline is orchestrated using Apache Airflow and containerized using Docker. SQL and Python are the primary languages for data manipulation and analysis.
+   * Vertica Database
+   * AWS S3
+   * Apache Airflow
+   * Python
+   * Docker
 
 ## Technologies and Tools
 
