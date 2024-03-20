@@ -15,10 +15,10 @@ This repository showcases my work in data engineering and data analysis, demonst
 ## Technologies and Tools
 
 * **Data Engineering:**
-    * [List core data engineering tools - e.g., Apache Spark, Kafka, Airflow, etc.]
+    * [Apache Spark, Kafka, Airflow]
 * **Data Warehousing and Databases:**
-    * [List database technologies - e.g., PostgreSQL, MySQL, BigQuery, Redshift, etc.]
+    * [PostgreSQL, MySQL, BigQuery, Redshift]
 * **Data Analysis and Visualization:**  
-    * [Python/R]
-    * [List libraries - e.g., Pandas, NumPy, Scikit-learn, Matplotlib, Seaborn, ggplot2, etc.]  
+    * [Python]
+    * [Pandas, NumPy, SPARK, Matplotlib, Seaborn]  
 
