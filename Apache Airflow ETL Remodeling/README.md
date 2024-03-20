@@ -5,7 +5,7 @@
 - [File Structure](#file-structure)
 - [DAG Descriptions](#dag-descriptions)
   - [Original Tables DAG](#original-tables-dag)
-  - [Sourse Tables DAG](#sourse-tables-dag)
+  - [Source Tables DAG](#source-tables-dag)
   - [Increment DAG](#increment-dag)
 
 ## Overview
@@ -15,7 +15,7 @@ This repository contains Apache Airflow DAGs for ETL pipelines designed to manag
 
 - `/src/dags`
   - `original_tables_dag.py`
-  - `sourse_tables_dag.py`
+  - `source_tables_dag.py`
   - `increment_dag.py`
 - `/sql`
 	- `migrations`
@@ -53,11 +53,11 @@ The `original_tables_dag.py` DAG file orchestrates tasks to handle the initial l
 
 ### Original Tables DAG Schema:
 
-![](https://github.com/TenebrisX/de-project-sprint-2/blob/main/old_schema.png)
+![](https://github.com/TenebrisX/Data-Engineering-Projects/blob/main/Apache%20Airflow%20ETL%20Remodeling/images/original_tables_schema.png)
 
 
-### Sourse Tables DAG
-## Same as the Original Tables DAG but with extra steps for data quality check
+### Source Tables DAG
+#### Same as the Original Tables DAG but with extra steps for data quality check
 
 The `sourse_tables_dag.py` DAG file orchestrates tasks to handle the initial load of data into the data mart. It performs the following tasks:
 
@@ -84,9 +84,9 @@ The `sourse_tables_dag.py` DAG file orchestrates tasks to handle the initial loa
 11. **check_row_count_user_activity_log:** Performs a SQL check on the row count in the 'user_activity_log' table.
 
 
-### Sourse Tables DAG Schema:
+### Source Tables DAG Schema:
 
-![](https://github.com/TenebrisX/de-project-sprint-2/blob/main/old_schema.png)
+![](https://github.com/TenebrisX/Data-Engineering-Projects/blob/main/Apache%20Airflow%20ETL%20Remodeling/images/sourse_tables_schema.png)
 
 
 ### Increment DAG
