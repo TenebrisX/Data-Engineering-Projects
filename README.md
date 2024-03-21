@@ -34,8 +34,6 @@ This repository showcases my work in data engineering.
 <img alt='Vertica' src='https://img.shields.io/badge/Vertica-100000?style=for-the-badge&logo=Vertica&logoColor=0F31F4&labelColor=00B3FF&color=00AAFF'/></a>
 * **Cloud Technologies:**<br>
 ![AWS](https://img.shields.io/badge/Amazon_AWS-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)
-* **Visualization:**<br>
-![Tableau](	https://img.shields.io/badge/Tableau-E97627?style=for-the-badge&logo=Tableau&logoColor=white) 
 * **Workflows:**<br>
 ![Apache Airflow](https://img.shields.io/badge/Apache%20Airflow-017CEE?style=for-the-badge&logo=Apache%20Airflow&logoColor=white)
 ![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-000?style=for-the-badge&logo=apachekafka)
