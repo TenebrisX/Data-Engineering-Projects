@@ -1,56 +1,73 @@
-# Data Lake Project
+# Social Media Data Lake Project
 
-This project analyzes messaging data to provide insights into user behavior, geographic trends, and potential friend recommendations.
+This project builds a robust, scalable data lake, enabling advanced analytics on social media data.
 
-## Data Processing
+**Key Components**
 
-The project utilizes the following data processing steps:
+* **Data Sources:**
+     * Social media feeds 
+     * CRM data
+     * Website logs
+     * External data sets
+* **Data Ingestion:**
+    * Batch process
+    * Real-time ingestion
+* **Data Lake Storage:**
+    * HDFS for cost-effective storage
+    * AWS S3 Cloud object storage for scalability and accessibility
+* **Data Processing:**
+   * Spark for distributed data processing 
+   * Stream processing for real-time insights
+* **Data Modeling** 
+    * Raw Data Layer: Data stored in its original format
+    * Staging Layer: Data preparation and quality checks 
+    * Processed Data Layer (Data Marts): Data aggregated and optimized for analysis (user analytics, zone analytics, friend recommendations)
 
-1. **Data Loading:** Loads events and geo data into Spark DataFrames.
-2. **Data Cleaning:** Handles missing values, inconsistencies, and potential errors.
-3. **Geospatial Calculations:** Determines the nearest city for each event and calculates distances between users.
-4. **User Analysis:** Calculates metrics such as:
-   * User activity within zones
-   * Home city determination based on consecutive days spent in a location
-   * Travel patterns identification  
+**ETL Pipeline**
 
-5. **Friend Recommendations:** Generates friend recommendations based on:
-   * Shared subscriptions to channels
-   * Geographical proximity (users within a specified distance)
+1. **Load Australian Geo Data:** Load geodata CSV, containing Australian city data, into HDFS ([useful_info.md](./useful_info.md))
 
-## Datamarts
+2. **Data Ingestion (Batch):**
+   * Import events and geo CSV files into HDFS using **hdfs dfs -copyFromLocal** ([useful_info.md](./useful_info.md)) 
 
-The project creates the following datamarts for easy consumption of analytical results:
+3. **Data Transformation with Spark:**
+    * [main.py](./src/scripts/main.py):
+        * Loads raw data
+        * Performs data cleaning and transformations
+        * Derives geographic insights (nearest zones, user zones, travel patterns)
+        * Calculates friend recommendations 
+    * [data_processor.py](./src/scripts/utils/data_processor.py): Defines classes for data loading and writing 
 
-* **User Datamart:**
-   * User ID
-   * Last known city
-   * Potential home city
-   * Travel history
-   * Local time information 
+4. **Store Processed Data in Datamarts:** 
+    * Parquet format for efficient querying
+    * Stored in the 'analytics' folder of the data lake
 
-* **Zone Datamart:**
-   * Zone (city) ID
-   * Week 
-   * Month
-   * Number of messages sent
-   * Number of reactions 
-   * Number of subscriptions
-   * Number of new users (registrations)
+5. **Data Access and Exploration:**
+    * Spark SQL to query the datamarts
 
-* **Friend Recommendations Datamart:**
-   * User ID (potential friend)
-   * Recommended User ID
-   * Distance between users
-   * Processing datetime
+**Airflow DAG**
 
-## Technologies Used
+* [dag.py](./src/dags/dag.py): Defines the Airflow DAG with task dependencies 
+    * **dm_users** - Creates user datamart  
+    * **dm_zones** - Creates  zone-level datamart
+    * **dm_friends_recomendation** - Creates friend recommendations datamart
 
-* **Spark:** Distributed data processing framework for efficient handling of large datasets.
-* **Python:** Programming language used for data manipulation, analysis, and recommendation logic.
-* **PySpark:** Python API for Spark.
-* **Apache Hadoop:**  An open source framework based on Java that manages the storage and processing of large amounts of data for applications.
-* **Apache Airflow** An open-source workflow management platform for data engineering pipelines.
-* **Docker** A software platform that allows you to build, test, and deploy applications quickly.
-* **YARN** Allocating system resources to the various applications running in a Hadoop cluster and scheduling tasks to be executed on different cluster nodes.
-* **Jupiter** A web-based application used to create and share interactive notebook documents.
+**Project Structure** 
+```
+├── README.md
+├── useful_info.md
+├── src
+│   ├── dags
+│   │   └── dag.py
+│   │
+│   └── scripts
+│       ├── main.py
+│       ├── analytics_engine.py
+│       ├── utils
+│       │   ├── data_processor.py
+│       │   └── distance_calculator.py
+│       ├── geo_processor.py
+│       ├── friend_recommender.py
+│       └── user_geo_analyzer.py
+├── requirements.txt
+```
