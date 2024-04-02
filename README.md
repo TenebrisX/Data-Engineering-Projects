@@ -19,7 +19,7 @@ This repository showcases my work in data engineering.
 | [Airflow ETL Pipelines for Sales Mart and Customer Retention](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Apache%20Airflow%20ETL%20Remodeling) | This repository contains Apache Airflow DAGs for ETL pipelines designed to manage the update process for tables in a sales data mart and compute customer retention metrics... | PostgreSQL, AWS S3, Apache Airflow, Python, Docker |
 | [Multiple Sources Data Warehouse](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Multiple%20Sources%20Data%20Warehouse) | This project involves enhancing existing data warehouse by adding a new data source and data mart... | PostgreSQL, MongoDB, AWS S3, Apache Airflow, Python, Docker |
 | [DataVault ETL Project](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Vertica%20Data%20Warehouse) | This project involves the extraction, transformation, and loading (ETL) of data from AWS S3 to a Vertica database... | Vertica Database, AWS S3, Apache Airflow, Python, Docker | 
-| [Social Media Data Lake](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Data%20Lake%20Project) | This project analyzes messaging data to provide insights into user behavior, geographic trends, and potential friend recommendations. | Spark, Python, Apache Airflow, Apache Hadoop, Docker, YARN, Jupiter | 
+| [Social Media Data Lake](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Data%20Lake%20Project) | This project builds a robust, scalable data lake, enabling advanced analytics on social media data. | Spark, Python, Apache Airflow, Apache Hadoop, Docker, YARN, Jupiter | 
 
 ## Technologies and Tools
 
