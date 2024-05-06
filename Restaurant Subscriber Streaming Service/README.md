@@ -15,3 +15,5 @@ This project implements a real-time streaming service that enables restaurants t
 * **Kafka:** Message broker for receiving restaurant ad data and sending prepared notifications.
 * **PostgreSQL:** Database for subscriber data and feedback analytics.
 
+**Schema**
+![schema](https://github.com/TenebrisX/Data-Engineering-Projects/blob/main/Restaurant%20Subscriber%20Streaming%20Service/src/img/schema.png)
