@@ -22,6 +22,9 @@ This project builds a robust, scalable data lake, enabling advanced analytics on
     * Raw Data Layer: Data stored in its original format
     * Staging Layer: Data preparation and quality checks 
     * Processed Data Layer (Data Marts): Data aggregated and optimized for analysis (user analytics, zone analytics, friend recommendations)
+ 
+**Diagram**<br><br>
+![Diagram](https://github.com/TenebrisX/Data-Engineering-Projects/blob/main/Data%20Lake%20Project/img/sm_data_lake_diagram.drawio.png)
 
 **ETL Pipeline**
 
