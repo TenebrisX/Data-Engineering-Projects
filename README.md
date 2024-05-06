@@ -20,6 +20,8 @@ This repository showcases my work in data engineering.
 | [Multiple Sources Data Warehouse](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Multiple%20Sources%20Data%20Warehouse) | This project involves enhancing existing data warehouse by adding a new data source and data mart... | PostgreSQL, MongoDB, AWS S3, Apache Airflow, Python, Docker |
 | [DataVault ETL Project](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Vertica%20Data%20Warehouse) | This project involves the extraction, transformation, and loading (ETL) of data from AWS S3 to a Vertica database... | Vertica Database, AWS S3, Apache Airflow, Python, Docker | 
 | [Social Media Data Lake](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Data%20Lake%20Project) | This project analyzes messaging data to provide insights into user behavior, geographic trends, and potential friend recommendations. | Spark, Python, Apache Airflow, Apache Hadoop, Docker, YARN, Jupiter | 
+| [Real-Time Restaurant Ad Targeting](https://github.com/TenebrisX/Data-Engineering-Projects/tree/main/Restaurant%20Subscriber%20Streaming%20Service) | A real-time system that enables restaurants to send targeted promotional campaigns to subscribed users. | Spark Structured Streaming, Kafka, PostgreSQL, Python | 
+
 
 ## Technologies and Tools
 
