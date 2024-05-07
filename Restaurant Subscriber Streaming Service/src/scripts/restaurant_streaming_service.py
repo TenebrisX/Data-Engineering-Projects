@@ -1,24 +1,18 @@
 # Imports
+import logging
+import os
+
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import from_json, to_json, col, lit, struct, from_unixtime, current_timestamp
 from pyspark.sql.types import StructType, StructField, StringType, LongType, TimestampType
 
-# Kafka and PostgreSQL configuration parameters
-KAFKA_BOOTSTRAP_SERVERS = 'rc1b-2erh7b35n4j4v869.mdb.yandexcloud.net:9091'
-KAFKA_SECURITY_PROTOCOL = 'SASL_SSL'
-KAFKA_SASL_MECHANISM = 'SCRAM-SHA-512'
-KAFKA_SASL_CONFIG = 'org.apache.kafka.common.security.scram.ScramLoginModule required username="de-student" password=\"ltcneltyn\";'
-POSTGRES_URL = "jdbc:postgresql://localhost:5432/de"
-POSTGRES_DRIVER = 'org.postgresql.Driver'
-POSTGRES_USER_CLOUD = "student"
-POSTGRES_PASSWORD_CLOUD = "de-student"
-POSTGRES_USER_LOCAL = "jovyan"
-POSTGRES_PASSWORD_LOCAL = "jovyan"
+import configuration as config
+
+# Logging Setup
+logging.basicConfig(level=logging.ERROR)  
+logger = logging.getLogger(__name__)
 
 
-# Input and output Kafka topics
-TOPIC_NAME_IN = 'kafka.kotlyarovb_in'
-TOPIC_NAME_OUT = 'kafka.kotlyarovb_out'
 
 class RestaurantStreamingService:
     """
@@ -52,11 +46,11 @@ class RestaurantStreamingService:
 
         df = self.spark.readStream \
             .format('kafka') \
-            .option('kafka.bootstrap.servers', KAFKA_BOOTSTRAP_SERVERS) \
+            .option('kafka.bootstrap.servers', config.KAFKA_BOOTSTRAP_SERVERS) \
             .option('subscribe', self.input_topic) \
-            .option('kafka.security.protocol', KAFKA_SECURITY_PROTOCOL) \
-            .option('kafka.sasl.mechanism', KAFKA_SASL_MECHANISM) \
-            .option('kafka.sasl.jaas.config', KAFKA_SASL_CONFIG) \
+            .option('kafka.security.protocol', config.KAFKA_SECURITY_PROTOCOL) \
+            .option('kafka.sasl.mechanism', config.KAFKA_SASL_MECHANISM) \
+            .option('kafka.sasl.jaas.config', config.KAFKA_SASL_CONFIG) \
             .load() \
             .select(from_json(col('value').cast(StringType()), self.schema).alias('event'))
 
@@ -72,11 +66,11 @@ class RestaurantStreamingService:
 
         df = self.spark.read \
             .format('jdbc') \
-            .option('url', POSTGRES_URL) \
-            .option('driver', POSTGRES_DRIVER) \
+            .option('url', config.POSTGRES_URL) \
+            .option('driver', config.POSTGRES_DRIVER) \
             .option('dbtable', 'subscribers_restaurants') \
-            .option('user', POSTGRES_USER_CLOUD) \
-            .option('password', POSTGRES_PASSWORD_CLOUD) \
+            .option('user', config.POSTGRES_USER_CLOUD) \
+            .option('password', config.POSTGRES_PASSWORD_CLOUD) \
             .load() \
             .dropDuplicates(["client_id", "restaurant_id"])
 
@@ -126,17 +120,19 @@ class RestaurantStreamingService:
         Args:
             df (DataFrame): The DataFrame to send to Kafka.
         """
-
-        df.select(to_json(struct("*")).alias("value")) \
-            .writeStream \
-            .format("kafka") \
-            .option('kafka.bootstrap.servers', KAFKA_BOOTSTRAP_SERVERS) \
-            .option('kafka.security.protocol', KAFKA_SECURITY_PROTOCOL) \
-            .option('kafka.sasl.mechanism', KAFKA_SASL_MECHANISM) \
-            .option('kafka.sasl.jaas.config', KAFKA_SASL_CONFIG) \
-            .option("topic", self.output_topic) \
-            .trigger(processingTime="1 minutes") \
-            .start()
+        try:
+            df.select(to_json(struct("*")).alias("value")) \
+                .writeStream \
+                .format("kafka") \
+                .option('kafka.bootstrap.servers', config.KAFKA_BOOTSTRAP_SERVERS) \
+                .option('kafka.security.protocol', config.KAFKA_SECURITY_PROTOCOL) \
+                .option('kafka.sasl.mechanism', config.KAFKA_SASL_MECHANISM) \
+                .option('kafka.sasl.jaas.config', config.KAFKA_SASL_CONFIG) \
+                .option("topic", self.output_topic) \
+                .trigger(processingTime="1 minutes") \
+                .start()
+        except Exception as e:
+            logger.error(f"Error writing to Kafka: {str(e)}")
 
     def write_to_postgres(self, df: DataFrame):
         """
@@ -145,17 +141,19 @@ class RestaurantStreamingService:
         Args:
             df (DataFrame): The DataFrame to write to PostgreSQL.
         """
-
-        df.writeStream \
-            .format("jdbc") \
-            .outputMode('append') \
-            .option("url", POSTGRES_URL) \
-            .option('driver', POSTGRES_DRIVER) \
-            .option("dbtable", "subscribers_feedback") \
-            .option("user", POSTGRES_USER_LOCAL) \
-            .option("password", POSTGRES_PASSWORD_LOCAL) \
-            .trigger(processingTime="1 minutes") \
-            .start()
+        try:
+            df.writeStream \
+                .format("jdbc") \
+                .outputMode('append') \
+                .option("url", config.POSTGRES_URL) \
+                .option('driver', config.POSTGRES_DRIVER) \
+                .option("dbtable", "subscribers_feedback") \
+                .option("user", config.POSTGRES_USER_LOCAL) \
+                .option("password", config.POSTGRES_PASSWORD_LOCAL) \
+                .trigger(processingTime="1 minutes") \
+                .start()
+        except Exception as e:
+            logger.error(f"Error writing to PostgreSQL: {str(e)}")
 
     def run(self):
         """
@@ -199,5 +197,5 @@ if __name__ == "__main__":
         .config("spark.sql.session.timeZone", "UTC") \
         .getOrCreate()
 
-    service = RestaurantStreamingService(spark, TOPIC_NAME_IN, TOPIC_NAME_OUT)
+    service = RestaurantStreamingService(spark, config.TOPIC_NAME_IN, config.TOPIC_NAME_OUT)
     service.run()
