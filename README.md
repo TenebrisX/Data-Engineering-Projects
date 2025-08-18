@@ -4,7 +4,6 @@ This repository showcases my work in data engineering.
 
 ## Table of Contents
 * [Projects](#projects)
-* [Technologies and Tools](#technologies-and-tools)
 
 ## Projects
 
