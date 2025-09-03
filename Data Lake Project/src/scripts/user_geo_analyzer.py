@@ -5,11 +5,9 @@ from scripts.utils.distance_calculator import calculate_distance
 import logging
 import pytz
 
-# Setup Logger
 logger = logging.getLogger(__name__) 
 logger.setLevel(logging.INFO) 
 
-# Create a console handler to see log messages 
 console_handler = logging.StreamHandler()
 logger.addHandler(console_handler)
 

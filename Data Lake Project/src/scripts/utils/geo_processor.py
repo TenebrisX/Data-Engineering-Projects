@@ -5,7 +5,6 @@ from pyspark.sql.window import Window
 
 from scripts.utils.distance_calculator import calculate_distance
 
-# Setup Logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()

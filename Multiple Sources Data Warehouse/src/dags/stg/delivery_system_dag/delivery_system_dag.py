@@ -1,3 +1,9 @@
+"""Airflow DAG for delivery system data extraction and loading.
+
+This module contains an Airflow DAG that extracts data from external delivery system APIs
+and loads it into the staging database for further processing in the data warehouse.
+"""
+
 from airflow.decorators import dag, task
 import logging
 import pendulum
@@ -16,34 +22,28 @@ from stg.delivery_system_dag.loaders.dest.deliveries_dest import DeliveryDest
 
 logger = logging.getLogger(__name__)
 
-# Configuration (replace with your actual values)
 dwh_pg_connect = ConnectionBuilder.pg_conn("PG_WAREHOUSE_CONNECTION")
 
 @dag(
-    schedule_interval='0/15 * * * *',  # Set the schedule for every 15 minutes
-    start_date=pendulum.datetime(2022, 5, 5, tz="UTC"),  # Set the start date
-    catchup=False,  # Do not catch up for previous periods
-    tags=['api', 'stg', 'origin'],  # Tags for filtering in Airflow UI
-    is_paused_upon_creation=True  # Pause upon creation
+    schedule_interval='0/15 * * * *',
+    start_date=pendulum.datetime(2022, 5, 5, tz="UTC"),
+    catchup=False,
+    tags=['api', 'stg', 'origin'],
+    is_paused_upon_creation=True
 )
 def stg_delivery_system():
-
-    # Connect to database and API
+    """STG DAG for extracting delivery system data from external APIs."""
     couriers_api_client = CourierApiReader(logger)
     restaurants_api_client = RestaurantApiReader(logger)
     deliveries_api_client = DeliveryApiReader(logger)
     
-    
     courier_dest = CourierDest(dwh_pg_connect)
     restaurant_dest = RestaurantDest(dwh_pg_connect)
     delivery_dest = DeliveryDest(dwh_pg_connect)
-    
 
     @task()
     def load_couriers():
-        """
-        Loads courier data from the API to the staging database.
-        """
+        """Load courier data from the API to the staging database."""
         loader = CourierLoader(
             dwh_pg_connect, couriers_api_client, courier_dest, logger
         )
@@ -51,9 +51,7 @@ def stg_delivery_system():
 
     @task()
     def load_restaurants():
-        """
-        Loads restaurant data from the API to the staging database.
-        """
+        """Load restaurant data from the API to the staging database."""
         loader = RestaurantLoader(
             dwh_pg_connect, restaurants_api_client, restaurant_dest, logger
         )
@@ -61,9 +59,7 @@ def stg_delivery_system():
 
     @task()
     def load_deliveries():
-        """
-        Loads delivery data from the API to the staging database.
-        """
+        """Load delivery data from the API to the staging database."""
         loader = DeliveryLoader(
             dwh_pg_connect, deliveries_api_client, delivery_dest, logger
         )

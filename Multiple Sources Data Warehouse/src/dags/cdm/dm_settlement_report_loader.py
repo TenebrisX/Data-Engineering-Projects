@@ -1,3 +1,9 @@
+"""Settlement report data loader from DDS to CDM layer.
+
+This module handles the ETL process for loading settlement report data from the DDS layer
+to the CDM layer, including restaurant performance metrics and financial calculations.
+"""
+
 from logging import Logger
 from typing import List
 
@@ -9,8 +15,9 @@ from psycopg.rows import class_row
 from pydantic import BaseModel
 from datetime import date, timedelta
 
-# Define a Pydantic model for the structure of the settlement report object
+
 class SettlementReportObj(BaseModel):
+    """Data model for settlement report objects."""
     restaurant_id: int
     restaurant_name: str
     settlement_date: date
@@ -22,13 +29,27 @@ class SettlementReportObj(BaseModel):
     restaurant_reward_sum: float
 
 
-# Repository class for interacting with the data source (DDS) for settlement reports
 class SettlementReportDdsRepository:
+    """Repository for reading settlement report data from DDS layer."""
+    
     def __init__(self, pg: PgConnect) -> None:
+        """Initialize the DDS repository.
+        
+        Args:
+            pg: PostgreSQL connection object.
+        """
         self._db = pg
 
-    # Retrieve a list of settlement reports based on specified criteria
     def list_reports(self, report_threshold: date, limit: int) -> List[SettlementReportObj]:
+        """Retrieve settlement reports from DDS layer.
+        
+        Args:
+            report_threshold: Date threshold for filtering reports.
+            limit: Maximum number of reports to retrieve.
+            
+        Returns:
+            List of SettlementReportObj instances.
+        """
         with self._db.client().cursor(row_factory=class_row(SettlementReportObj)) as cur:
             cur.execute(
                 """
@@ -68,10 +89,16 @@ class SettlementReportDdsRepository:
         return objs
 
 
-# Repository class for interacting with the destination database (CDM) for settlement reports
 class SettlementReportDestRepository:
-    # Insert a settlement report into the destination database
+    """Repository for writing settlement report data to CDM layer."""
+    
     def insert_report(self, conn: Connection, report: SettlementReportObj) -> None:
+        """Insert settlement report into CDM layer.
+        
+        Args:
+            conn: Database connection.
+            report: SettlementReportObj to insert.
+        """
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -102,52 +129,52 @@ class SettlementReportDestRepository:
             )
 
 
-# Loader class for orchestrating the loading of settlement reports from source to destination
 class SettlementReportLoader:
+    """Loader for transferring settlement report data from DDS to CDM layer."""
+    
     WF_KEY = "settlement_report_cdm_workflow"
     LAST_LOADED_ID_KEY = "last_loaded_date"
     BATCH_LIMIT = 10000
 
     def __init__(self, pg_origin: PgConnect, pg_dest: PgConnect, log: Logger) -> None:
-        # Initialize with source and destination database connections, logger, and repositories
+        """Initialize the settlement report loader.
+        
+        Args:
+            pg_origin: Source database connection.
+            pg_dest: Destination database connection.
+            log: Logger instance.
+        """
         self.pg_dest = pg_dest
         self.dds = SettlementReportDdsRepository(pg_origin)
         self.cdm = SettlementReportDestRepository()
         self.settings_repository = CdmEtlSettingsRepository()
         self.log = log
 
-    # Load settlement reports from the source to the destination
     def load_reports(self):
+        """Load settlement reports from DDS to CDM layer."""
         with self.pg_dest.connection() as conn:
-            # Retrieve workflow settings and set a default value if not available
             wf_setting = self.settings_repository.get_setting(conn, self.WF_KEY)
             if not wf_setting:
                 wf_setting = EtlSetting(id=0, workflow_key=self.WF_KEY, workflow_settings={self.LAST_LOADED_ID_KEY: date.today() - timedelta(days=30)})
 
-            # Retrieve the last loaded date from the workflow settings
             last_loaded = wf_setting.workflow_settings[self.LAST_LOADED_ID_KEY]
             self.log.info(f"Last loaded date: {last_loaded}")
 
-            # Convert last_loaded to ISO format if it's a date object
             if isinstance(last_loaded, date):
                 last_loaded = last_loaded.isoformat()
 
-            # Retrieve a batch of settlement reports to load
             load_queue = self.dds.list_reports(last_loaded, self.BATCH_LIMIT)
             self.log.info(f"Found {len(load_queue)} reports to load.")
 
-            # Exit if no reports to load
             if not load_queue:
                 self.log.info("Quitting.")
                 return
 
             self.log.info(f"Load queue length: {len(load_queue)}")
 
-            # Insert each report into the destination database
             for report in load_queue:
                 self.cdm.insert_report(conn, report)
 
-            # Update the last loaded date in the workflow settings
             wf_setting.workflow_settings[self.LAST_LOADED_ID_KEY] = max([t.settlement_date.isoformat() for t in load_queue])
             wf_setting_json = du.json2str(wf_setting.workflow_settings)
             self.settings_repository.save_setting(conn, wf_setting.workflow_key, wf_setting_json)

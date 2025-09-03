@@ -2,7 +2,6 @@ import pyspark.sql.functions as F
 import logging
 from scripts.utils.distance_calculator import calculate_distance
 
-# Setup Logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()
@@ -43,7 +42,7 @@ class FriendRecommender:
 
     def calculate_recommendations(self):
         """Calculates friend recommendations based on shared subscriptions and proximity.
-        """  # Add an overall docstring for the function
+        """ 
 
         logger.info("Starting friend recommendation calculation")
 

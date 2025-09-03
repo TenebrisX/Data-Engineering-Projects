@@ -9,14 +9,14 @@ from scripts.utils.geo_processor import GeoProcessor
 from scripts.analytics_engine import AnalyticsEngine
 from scripts.user_geo_analyzer import find_nearest_city, determine_actual_city, determine_home_city, calculate_travel, calculate_local_time
 from scripts.firend_recommender import FriendRecommender
-# Environment Setup (if needed)
+
 os.environ['HADOOP_CONF_DIR'] = '/etc/hadoop/conf'
 os.environ['YARN_CONF_DIR'] = '/etc/hadoop/conf'
 os.environ['JAVA_HOME'] = '/usr'
 os.environ['SPARK_HOME'] = '/usr/lib/spark'
 os.environ['PYTHONPATH'] = '/usr/local/lib/python3'
 
-# Setup Logger
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()
@@ -37,15 +37,12 @@ def create_user_datamart(events_path, cities_path, output_path):
         spark = SparkSession.builder.appName('datamart_users').getOrCreate()
         loader = DataLoader(spark)
     
-        # Load datasets
         events_df = loader.load_events_users(events_path)
         cities_df = loader.load_cities(cities_path)
         
-        # Broadcast the cities_df for improved join performance
         cities_df = cities_df.hint("broadcast")
 
         events_geo_df = find_nearest_city(events_df, cities_df)
-        # Cache events_geo_df for reuse
         events_geo_df.persist()
         
         actual_city_df = determine_actual_city(events_geo_df)

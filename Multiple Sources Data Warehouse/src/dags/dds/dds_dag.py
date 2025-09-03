@@ -1,3 +1,9 @@
+"""Airflow DAG for DDS layer data loading.
+
+This module contains an Airflow DAG responsible for loading data from staging (STG) layer
+to the Data Distribution Service (DDS) layer, including dimension and fact tables.
+"""
+
 import logging
 import pendulum
 from airflow.decorators import dag, task
@@ -14,67 +20,64 @@ from lib import ConnectionBuilder
 log = logging.getLogger(__name__)
 
 @dag(
-    schedule_interval='0/15 * * * *',  # Schedule the DAG to run every 15 minutes.
-    start_date=pendulum.datetime(2022, 5, 5, tz="UTC"),  # Specify the start date of the DAG.
-    catchup=False,  # Do not run DAG for previous periods on startup.
-    tags=['stg', 'dds'],  # Tags used for filtering in the Airflow interface.
-    is_paused_upon_creation=True  # Pause the DAG upon creation.
+    schedule_interval='0/15 * * * *',
+    start_date=pendulum.datetime(2022, 5, 5, tz="UTC"),
+    catchup=False,
+    tags=['stg', 'dds'],
+    is_paused_upon_creation=True
 )
 def dds_dag():
-    # Create a connection to the data warehouse.
+    """DDS DAG for loading dimension and fact tables from staging layer."""
     dwh_pg_connect = ConnectionBuilder.pg_conn("PG_WAREHOUSE_CONNECTION")
-
-    # Define tasks for loading different data entities.
 
     @task(task_id="dm_users_load")
     def load_dm_users():
-        """Task to load DM Users data."""
+        """Load users dimension table from staging to DDS."""
         rest_loader = DMUserLoader(dwh_pg_connect, dwh_pg_connect, log)
         rest_loader.load_users()
 
     @task(task_id="dm_restaurants_load")
     def load_dm_restaurants():
-        """Task to load DM Restaurants data."""
+        """Load restaurants dimension table from staging to DDS."""
         rest_loader = DMRestaurantLoader(dwh_pg_connect, dwh_pg_connect, log)
         rest_loader.load_restaurants()
 
     @task(task_id="c_couriers_load")
     def load_c_couriers():
-        """Task to load C Couriers data."""
+        """Load couriers dimension table from staging to DDS."""
         rest_loader = CCurierLoader(dwh_pg_connect, dwh_pg_connect, log)
         rest_loader.load_couriers()
 
     @task(task_id="dm_timestamps_load")
     def load_dm_timestamps():
-        """Task to load DM Timestamps data."""
+        """Load timestamps dimension table from staging to DDS."""
         rest_loader = DMTimestampLoader(dwh_pg_connect, dwh_pg_connect, log)
         rest_loader.load_timestamps()
 
     @task(task_id="c_deliveries_load")
     def load_c_deliveries():
-        """Task to load C Deliveries data."""
+        """Load deliveries table from staging to DDS."""
         rest_loader = CDeliveriesLoader(dwh_pg_connect, dwh_pg_connect, log)
         rest_loader.load_deliveries()
 
     @task(task_id="dm_products_load")
     def load_dm_products():
-        """Task to load DM Products data."""
+        """Load products dimension table from staging to DDS."""
         rest_loader = DMProductsLoader(dwh_pg_connect, dwh_pg_connect, log)
         rest_loader.load_products()
 
     @task(task_id="dm_orders_load")
     def load_dm_orders():
-        """Task to load DM Orders data."""
+        """Load orders dimension table from staging to DDS."""
         rest_loader = DMOrdersLoader(dwh_pg_connect, dwh_pg_connect, log)
         rest_loader.load_orders()
 
     @task(task_id="fct_product_sales_load")
     def load_fct():
-        """Task to load FCT Product Sales data."""
+        """Load product sales fact table from staging to DDS."""
         rest_loader = FCTLoader(dwh_pg_connect, dwh_pg_connect, log)
         rest_loader.load_facts()
 
-    # Initialize the declared tasks.
     users_dict = load_dm_users()
     restaurants_dict = load_dm_restaurants()
     couriers_dict = load_c_couriers()
@@ -84,8 +87,6 @@ def dds_dag():
     orders_dict = load_dm_orders()
     fct_dict = load_fct()
 
-    # Define the execution sequence of tasks.
-    [users_dict, restaurants_dict, couriers_dict, timestamps_dict] >> deliveries_dict >> products_dict >> orders_dict >> fct_dict  # type: ignore
+    [users_dict, restaurants_dict, couriers_dict, timestamps_dict] >> deliveries_dict >> products_dict >> orders_dict >> fct_dict
 
-# Create an instance of the DAG.
 dds = dds_dag()

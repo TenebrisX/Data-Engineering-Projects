@@ -1,3 +1,9 @@
+"""PostgreSQL connection utilities for data warehouse operations.
+
+This module provides connection management utilities for PostgreSQL databases,
+including connection pooling and configuration management.
+"""
+
 from contextlib import contextmanager
 from typing import Generator
 
@@ -6,7 +12,19 @@ from airflow.hooks.base import BaseHook
 
 
 class PgConnect:
+    """PostgreSQL connection manager with configuration and connection pooling."""
+    
     def __init__(self, host: str, port: str, db_name: str, user: str, pw: str, sslmode: str = "require") -> None:
+        """Initialize PostgreSQL connection parameters.
+        
+        Args:
+            host: Database host address.
+            port: Database port number.
+            db_name: Database name.
+            user: Database user.
+            pw: Database password.
+            sslmode: SSL connection mode. Defaults to "require".
+        """
         self.host = host
         self.port = int(port)
         self.db_name = db_name
@@ -15,6 +33,11 @@ class PgConnect:
         self.sslmode = sslmode
 
     def url(self) -> str:
+        """Generate PostgreSQL connection URL string.
+        
+        Returns:
+            Formatted connection string.
+        """
         return """
             host={host}
             port={port}
@@ -32,10 +55,23 @@ class PgConnect:
             sslmode=self.sslmode)
 
     def client(self):
+        """Create a PostgreSQL client connection.
+        
+        Returns:
+            psycopg.Connection: Database connection object.
+        """
         return psycopg.connect(self.url())
 
     @contextmanager
     def connection(self) -> Generator[psycopg.Connection, None, None]:
+        """Context manager for database connections with automatic transaction handling.
+        
+        Yields:
+            psycopg.Connection: Database connection with automatic commit/rollback.
+            
+        Raises:
+            Exception: Any database operation exception.
+        """
         conn = psycopg.connect(self.url())
         try:
             yield conn
@@ -48,9 +84,18 @@ class PgConnect:
 
 
 class ConnectionBuilder:
+    """Factory class for building database connections from Airflow configurations."""
 
     @staticmethod
     def pg_conn(conn_id: str) -> PgConnect:
+        """Build PostgreSQL connection from Airflow connection configuration.
+        
+        Args:
+            conn_id: Airflow connection ID.
+            
+        Returns:
+            PgConnect: Configured PostgreSQL connection object.
+        """
         conn = BaseHook.get_connection(conn_id)
 
         sslmode = "require"

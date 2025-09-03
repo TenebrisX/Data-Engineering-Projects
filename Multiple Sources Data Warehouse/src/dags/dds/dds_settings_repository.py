@@ -1,3 +1,9 @@
+"""DDS layer ETL workflow settings repository.
+
+This module provides repository classes for managing ETL workflow settings
+and tracking processing state in the Data Distribution Service (DDS) layer.
+"""
+
 from typing import Dict, Optional
 
 from psycopg import Connection
@@ -5,24 +11,23 @@ from psycopg.rows import class_row
 from pydantic import BaseModel
 
 class EtlSetting(BaseModel):
-    """Pydantic model for ETL settings."""
+    """Data model for ETL workflow settings."""
     id: int
     workflow_key: str
     workflow_settings: Dict
 
 class DdsEtlSettingsRepository:
-    """Repository class for interacting with ETL settings in the database."""
+    """Repository for managing DDS layer ETL workflow settings."""
     
     def get_setting(self, conn: Connection, etl_key: str) -> Optional[EtlSetting]:
-        """
-        Retrieve ETL setting from the database.
+        """Retrieve ETL workflow setting from the database.
 
         Args:
-            conn (Connection): PostgreSQL database connection.
-            etl_key (str): Key to identify the ETL workflow.
+            conn: Database connection.
+            etl_key: Workflow key identifier.
 
         Returns:
-            Optional[EtlSetting]: EtlSetting instance if found, otherwise None.
+            EtlSetting instance if found, None otherwise.
         """
         with conn.cursor(row_factory=class_row(EtlSetting)) as cur:
             cur.execute(
@@ -41,13 +46,12 @@ class DdsEtlSettingsRepository:
         return obj
 
     def save_setting(self, conn: Connection, workflow_key: str, workflow_settings: str) -> None:
-        """
-        Save or update ETL setting in the database.
+        """Save or update ETL workflow setting in the database.
 
         Args:
-            conn (Connection): PostgreSQL database connection.
-            workflow_key (str): Key to identify the ETL workflow.
-            workflow_settings (str): JSON string representing the workflow settings.
+            conn: Database connection.
+            workflow_key: Workflow key identifier.
+            workflow_settings: JSON string of workflow settings.
         """
         with conn.cursor() as cur:
             cur.execute(

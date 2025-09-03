@@ -1,3 +1,9 @@
+"""STG layer ETL workflow settings repository.
+
+This module provides repository classes for managing ETL workflow settings
+and tracking processing state in the staging layer.
+"""
+
 from typing import Dict, Optional
 
 from psycopg import Connection
@@ -6,13 +12,25 @@ from pydantic import BaseModel
 
 
 class EtlSetting(BaseModel):
+    """Data model for ETL workflow settings."""
     id: int
     workflow_key: str
     workflow_settings: Dict
 
 
 class StgEtlSettingsRepository:
+    """Repository for managing STG layer ETL workflow settings."""
+    
     def get_setting(self, conn: Connection, etl_key: str) -> Optional[EtlSetting]:
+        """Retrieve ETL workflow setting from the database.
+
+        Args:
+            conn: Database connection.
+            etl_key: Workflow key identifier.
+
+        Returns:
+            EtlSetting instance if found, None otherwise.
+        """
         with conn.cursor(row_factory=class_row(EtlSetting)) as cur:
             cur.execute(
                 """
@@ -30,6 +48,13 @@ class StgEtlSettingsRepository:
         return obj
 
     def save_setting(self, conn: Connection, workflow_key: str, workflow_settings: str) -> None:
+        """Save or update ETL workflow setting in the database.
+
+        Args:
+            conn: Database connection.
+            workflow_key: Workflow key identifier.
+            workflow_settings: JSON string of workflow settings.
+        """
         with conn.cursor() as cur:
             cur.execute(
                 """

@@ -93,13 +93,10 @@ class DMTimestampLoader:
         # If an error occurs, changes will be rolled back (transaction rollback).
         with self.pg_dest.connection() as conn:
 
-            # Read the loading state
-            # If the setting does not exist, create it.
             wf_setting = self.settings_repository.get_setting(conn, self.WF_KEY)
             if not wf_setting:
                 wf_setting = EtlSetting(id=0, workflow_key=self.WF_KEY, workflow_settings={self.LAST_LOADED_ID_KEY: -1})
 
-            # Read the next batch of objects.
             last_loaded = wf_setting.workflow_settings[self.LAST_LOADED_ID_KEY]
             load_queue = self.stg.list_timestamps(last_loaded, self.BATCH_LIMIT)
             self.log.info(f"Found {len(load_queue)} timestamps to load.")
@@ -107,15 +104,10 @@ class DMTimestampLoader:
                 self.log.info("Quitting.")
                 return
 
-            # Save objects to the dwh database.
             for timestamp in load_queue:
                 self.dds.insert_timestamps(conn, timestamp)
-
-            # Save progress.
-            # We use the same connection, so the setting will be saved along with the objects,
-            # or all changes will be rolled back as a whole.
             wf_setting.workflow_settings[self.LAST_LOADED_ID_KEY] = max([t.id for t in load_queue])
-            wf_setting_json = du.json2str(wf_setting.workflow_settings)  # Convert to a string to store in the database.
+            wf_setting_json = du.json2str(wf_setting.workflow_settings)
             self.settings_repository.save_setting(conn, wf_setting.workflow_key, wf_setting_json)
 
             self.log.info(f"Load finished on {wf_setting.workflow_settings[self.LAST_LOADED_ID_KEY]}")

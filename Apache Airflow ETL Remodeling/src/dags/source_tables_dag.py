@@ -1,3 +1,10 @@
+"""Airflow DAG for source tables processing with data quality checks.
+
+This module contains an Airflow DAG that handles source table processing, including
+data loading from S3, staging operations, and comprehensive data quality checks
+with result tracking.
+"""
+
 import requests
 import json
 import os
@@ -19,20 +26,15 @@ from airflow.sensors.filesystem import FileSensor
 from airflow.hooks.http_hook import HttpHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
-
-# Retrieve HTTP connection details from Airflow connection 'http_conn_id'
 http_conn_id = HttpHook.get_connection('http_conn_id')  
 api_key = http_conn_id.extra_dejson.get('api_key')  
 base_url = http_conn_id.host  
 
-# Define PostgreSQL connection ID
 postgres_conn_id = 'postgresql_de'  
 
-# Constants for nickname and cohort
 nickname = 'kotlyarov-bar'  
 cohort = '21'  
 
-# Define headers for API requests
 headers = {
     'X-Nickname': nickname,
     'X-Cohort': cohort,
@@ -41,19 +43,21 @@ headers = {
     'Content-Type': 'application/x-www-form-urlencoded'
 }
 
-# Function to make HTTP requests
-def make_request(ti, endpoint, method='GET', params=None):
-    """
-    Make HTTP requests to the specified endpoint.
 
-    Parameters:
-        - ti (TaskInstance): The task instance.
-        - endpoint (str): The URL endpoint.
-        - method (str): The HTTP method (GET or POST).
-        - params (dict): Optional parameters for the request.
+def make_request(ti, endpoint, method='GET', params=None):
+    """Make HTTP requests to the specified endpoint.
+
+    Args:
+        ti (TaskInstance): The task instance.
+        endpoint (str): The URL endpoint.
+        method (str): The HTTP method (GET or POST). Defaults to 'GET'.
+        params (dict, optional): Parameters for the request. Defaults to None.
 
     Returns:
-        - response (requests.Response): The HTTP response object.
+        requests.Response: The HTTP response object.
+
+    Raises:
+        requests.exceptions.HTTPError: If HTTP request fails.
     """
     print(f'Making {method} request to {endpoint}')  
     if method == 'GET':
@@ -64,31 +68,28 @@ def make_request(ti, endpoint, method='GET', params=None):
     print(f'Response is {response.content}')  
     return response
 
-# Function to generate a report and push task_id to XCom
+
 def generate_report(ti):
-    """
-    Function to generate a report by making a POST request and push task_id to XCom.
+    """Generate a report by making a POST request and push task_id to XCom.
 
-    Parameters:
-        - ti (TaskInstance): The task instance.
-
-    Returns:
-        None
+    Args:
+        ti (TaskInstance): The task instance.
     """
     response = make_request(ti, f'{base_url}/generate_report', method='POST')
     task_id = json.loads(response.content)['task_id']
     ti.xcom_push(key='task_id', value=task_id)
 
-# Function to get a report and push report_id to XCom
+
 def get_report(ti):
-    """
-    Function to get a report by making GET requests and push report_id to XCom.
+    """Get a report by making GET requests and push report_id to XCom.
 
-    Parameters:
-        - ti (TaskInstance): The task instance.
+    Polls the API endpoint until report generation is complete or timeout occurs.
 
-    Returns:
-        None
+    Args:
+        ti (TaskInstance): The task instance.
+
+    Raises:
+        TimeoutError: If report is not ready after maximum attempts.
     """
     task_id = ti.xcom_pull(key='task_id')
     report_id = None
@@ -109,17 +110,13 @@ def get_report(ti):
     ti.xcom_push(key='report_id', value=report_id)
     print(f'Report_id={report_id}')
 
-# Function to upload files from S3
+
 def upload_from_s3(ti, file_names):
-    """
-    Function to upload files from S3.
+    """Upload files from S3 to local storage.
 
-    Parameters:
-        - ti (TaskInstance): The task instance.
-        - file_names (list): List of file names to be uploaded.
-
-    Returns:
-        None
+    Args:
+        ti (TaskInstance): The task instance.
+        file_names (list): List of file names to be uploaded.
     """
     response = make_request(ti, f'{base_url}upload_from_s3/?report_id={report_id}&date={str(date)}T00:00:00',
                             headers=headers)
@@ -138,19 +135,15 @@ def upload_from_s3(ti, file_names):
             df.to_csv(dest_file_path, index=False)
             print(f"File '{s}' imported successfully.")
 
-# Function to upload data to staging in PostgreSQL
+
 def upload_data_to_staging(ti, filename, pg_table, pg_schema):
-    """
-    Function to upload data to staging in PostgreSQL.
+    """Upload data to staging in PostgreSQL.
 
-    Parameters:
-        - ti (TaskInstance): The task instance.
-        - filename (str): Name of the file to be uploaded.
-        - pg_table (str): PostgreSQL table name.
-        - pg_schema (str): PostgreSQL schema name.
-
-    Returns:
-        None
+    Args:
+        ti (TaskInstance): The task instance.
+        filename (str): Name of the file to be uploaded.
+        pg_table (str): PostgreSQL table name.
+        pg_schema (str): PostgreSQL schema name.
     """
     path = '/lessons/original_csvs/'
     df = pd.read_csv(path + filename)
@@ -169,15 +162,12 @@ def upload_data_to_staging(ti, filename, pg_table, pg_schema):
     row_count = df.to_sql(pg_table, engine, schema=pg_schema, if_exists='append', index=False)
     print(f'{row_count} rows were inserted')
 
+
 def check_failure_file_customer_research(context):
-    """
-    Inserts a record into the dq_checks_results table for a failed file sensor check on customer_research.
+    """Insert DQ check result for failed customer_research file sensor.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="failure_file_customer_research",
@@ -187,15 +177,12 @@ def check_failure_file_customer_research(context):
           """
     )
 
+
 def check_success_file_customer_research(context):
-    """
-    Inserts a record into the dq_checks_results table for a successful file sensor check on customer_research.
+    """Insert DQ check result for successful customer_research file sensor.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="success_file_customer_research",
@@ -205,15 +192,12 @@ def check_success_file_customer_research(context):
           """
     )
 
+
 def check_success_file_user_order_log(context):
-    """
-    Inserts a record into the dq_checks_results table for a successful file sensor check on user_order_log.
+    """Insert DQ check result for successful user_order_log file sensor.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="success_file_user_order_log",
@@ -223,15 +207,12 @@ def check_success_file_user_order_log(context):
           """
     )
 
+
 def check_failure_file_user_order_log(context):
-    """
-    Inserts a record into the dq_checks_results table for a failed file sensor check on user_order_log.
+    """Insert DQ check result for failed user_order_log file sensor.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="failure_file_user_order_log",
@@ -241,15 +222,12 @@ def check_failure_file_user_order_log(context):
           """
     )
 
+
 def check_success_file_user_activity_log(context):
-    """
-    Inserts a record into the dq_checks_results table for a successful file sensor check on user_activity_log.
+    """Insert DQ check result for successful user_activity_log file sensor.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="success_file_user_activity_log",
@@ -259,15 +237,12 @@ def check_success_file_user_activity_log(context):
           """
     )
 
+
 def check_failure_file_user_activity_log(context):
-    """
-    Inserts a record into the dq_checks_results table for a failed file sensor check on user_activity_log.
+    """Insert DQ check result for failed user_activity_log file sensor.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="failure_file_user_activity_log",
@@ -277,16 +252,12 @@ def check_failure_file_user_activity_log(context):
           """
     )
 
-# For the user_order_log first check
+
 def check_success_insert_user_order_log(context):
-    """
-    Inserts a record into the dq_checks_results table for a successful insert check on user_order_log.
+    """Insert DQ check result for successful user_order_log null value check.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="success_insert_user_order_log",
@@ -296,15 +267,12 @@ def check_success_insert_user_order_log(context):
           """
     )
 
+
 def check_failure_insert_user_order_log(context):
-    """
-    Inserts a record into the dq_checks_results table for a failed insert check on user_order_log.
+    """Insert DQ check result for failed user_order_log null value check.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="failure_insert_user_order_log",
@@ -314,16 +282,12 @@ def check_failure_insert_user_order_log(context):
           """
     )
 
-# For the user_activity_log first check
+
 def check_success_insert_user_activity_log(context):
-    """
-    Inserts a record into the dq_checks_results table for a successful insert check on user_activity_log.
+    """Insert DQ check result for successful user_activity_log null value check.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="success_insert_user_activity_log",
@@ -333,15 +297,12 @@ def check_success_insert_user_activity_log(context):
           """
     )
 
+
 def check_failure_insert_user_activity_log(context):
-    """
-    Inserts a record into the dq_checks_results table for a failed insert check on user_activity_log.
+    """Insert DQ check result for failed user_activity_log null value check.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="failure_insert_user_activity_log",
@@ -351,16 +312,12 @@ def check_failure_insert_user_activity_log(context):
           """
     )
 
-# For the user_order_log second check
+
 def check_success_insert_user_order_log2(context):
-    """
-    Inserts a record into the dq_checks_results table for a successful second insert check on user_order_log.
+    """Insert DQ check result for successful user_order_log row count check.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="success_insert_user_order_log2",
@@ -370,15 +327,12 @@ def check_success_insert_user_order_log2(context):
           """
     )
 
+
 def check_failure_insert_user_order_log2(context):
-    """
-    Inserts a record into the dq_checks_results table for a failed second insert check on user_order_log.
+    """Insert DQ check result for failed user_order_log row count check.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="failure_insert_user_order_log2",
@@ -388,16 +342,12 @@ def check_failure_insert_user_order_log2(context):
           """
     )
 
-# For the user_activity_log second check
+
 def check_success_insert_user_activity_log2(context):
-    """
-    Inserts a record into the dq_checks_results table for a successful second insert check on user_activity_log.
+    """Insert DQ check result for successful user_activity_log row count check.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="success_insert_user_activity_log2",
@@ -407,15 +357,12 @@ def check_success_insert_user_activity_log2(context):
           """
     )
 
+
 def check_failure_insert_user_activity_log2(context):
-    """
-    Inserts a record into the dq_checks_results table for a failed second insert check on user_activity_log.
+    """Insert DQ check result for failed user_activity_log row count check.
 
-    Parameters:
-        - context (dict): The context dictionary.
-
-    Returns:
-        None
+    Args:
+        context (dict): The context dictionary containing task execution context.
     """
     insert_dq_checks_results = PostgresOperator(
         task_id="failure_insert_user_activity_log2",
@@ -426,7 +373,6 @@ def check_failure_insert_user_activity_log2(context):
     )
 
 
-# DAG definition
 dag = DAG(
     dag_id='source_tables_dag',
     schedule_interval="@daily",
@@ -436,10 +382,8 @@ dag = DAG(
     tags=['source_tables'],
 )
 
-# Define the tasks
 begin = DummyOperator(task_id="begin", dag=dag)
 
-# Group 1 tasks (from the first DAG)
 with TaskGroup(group_id='group1', dag=dag) as fg1:
     generate_report = PythonOperator(
         task_id='generate_report',
@@ -463,7 +407,6 @@ with TaskGroup(group_id='group1', dag=dag) as fg1:
         dag=dag
     )
 
-# Group 2 tasks (from the second DAG)
 with TaskGroup(group_id='group2', dag=dag) as fg2:
     load_customer_research = PythonOperator(
         task_id='load_customer_research',
@@ -493,8 +436,6 @@ with TaskGroup(group_id='group2', dag=dag) as fg2:
         dag=dag
     )
 
-
-    # SQL checks for user_order_log and user_activity_log
     sql_check = SQLCheckOperator(
         task_id="user_order_log_isNull",
         sql="sql/data_quality_check/user_order_log_isNull_check.sql",
@@ -533,11 +474,8 @@ with TaskGroup(group_id='group2', dag=dag) as fg2:
 
 end = DummyOperator(task_id="end", dag=dag)
 
-# Set up task dependencies
 begin >> [fg1, fg2] >> end
 fg1 >> generate_report >> get_report >> upload_from_s3
 fg2 >> [load_customer_research, load_user_order_log, load_user_activity_log, load_price_log]
 load_user_order_log >> [sql_check, sql_check3]
 load_user_activity_log >> [sql_check2, sql_check4]
-
-

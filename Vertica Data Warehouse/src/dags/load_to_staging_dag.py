@@ -1,39 +1,49 @@
+"""Airflow DAG for CSV to Vertica ETL pipeline.
+
+This module contains an Airflow DAG that loads CSV data files into Vertica database tables
+using the COPY command for efficient bulk data loading. The DAG handles multiple tables
+including users, groups, dialogs, and group_log.
+"""
+
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.hooks.base_hook import BaseHook
 import vertica_python
 
-# Connection Configuration
-vertica_conn_id = "vertica_con"  # Airflow Connection ID for Vertica
-vertica_conn = BaseHook.get_connection(vertica_conn_id)  # Retrieve connection info
+vertica_conn_id = "vertica_con" 
+vertica_conn = BaseHook.get_connection(vertica_conn_id) 
 
-# Default DAG Arguments
 default_args = {
-    'owner': 'airflow',  # DAG ownership
-    'depends_on_past': False,  # Task runs independently of past runs
-    'start_date': datetime(2020, 9, 3)  # Initial start date
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2020, 9, 3)
 }
 
-# DAG Initialization
 dag = DAG(
     'csv_to_vertica_etl',
     default_args=default_args,
     description='ETL pipeline to load CSV data into Vertica',
-    schedule_interval=None,  # DAG will not run on a schedule
-    tags=['csv', 'vertica', 'staging', 'load']  # Descriptive tags for the DAG
+    schedule_interval=None,
+    tags=['csv', 'vertica', 'staging', 'load']
 )
 
-# Core ETL function
+
 def load_csv_to_vertica(table_name, csv_file):
-    """Loads CSV data into a specified Vertica table.
+    """Load CSV data into a specified Vertica table using bulk COPY operation.
+
+    This function connects to Vertica, truncates the target table, and loads CSV data
+    using the COPY command for efficient bulk loading. Rejected records are stored
+    in a separate rejection table for error analysis.
 
     Args:
-        table_name: The name of the target Vertica table.
-        csv_file: The path to the CSV file to be loaded.
-    """
+        table_name (str): The name of the target Vertica table.
+        csv_file (str): The path to the CSV file to be loaded.
 
-    # Retrieve Vertica connection details from Airflow
+    Raises:
+        vertica_python.Error: If database connection or operation fails.
+        FileNotFoundError: If the specified CSV file doesn't exist.
+    """
     conn_info = {
         'host': vertica_conn.host,
         'port': vertica_conn.port,
@@ -42,11 +52,9 @@ def load_csv_to_vertica(table_name, csv_file):
         'database': vertica_conn.schema
     }
 
-    # Connect to Vertica 
     connection = vertica_python.connect(**conn_info)
     cur = connection.cursor()
 
-    # Construct Vertica COPY command for efficient loading
     copy_command = f"""
     TRUNCATE TABLE STV2024021962__STAGING.{table_name}; 
 
@@ -59,24 +67,21 @@ def load_csv_to_vertica(table_name, csv_file):
     REJECTED DATA AS TABLE STV2024021962__STAGING.{table_name}_rejected;
     """
 
-    # Execute the load process
     cur.execute(copy_command)
 
-    # Finalize changes and cleanup
     connection.commit()
     connection.close()
 
-# Task creation loop:
+
 tables = ['users', 'groups', 'dialogs', 'group_log']
 
 for table in tables:
     task = PythonOperator(
         task_id=f'load_{table}_to_vertica',
         python_callable=load_csv_to_vertica,
-        op_args=[table, f'/data/{table}.csv'],  # Pass table name and CSV path
+        op_args=[table, f'/data/{table}.csv'],
         dag=dag,
     )
 
-# Entry point (for direct execution)
 if __name__ == "__main__":
     dag.cli()

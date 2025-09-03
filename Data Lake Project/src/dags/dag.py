@@ -6,7 +6,6 @@ from airflow import DAG
 from airflow.decorators import dag, task
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-#Environment Variables
 os.environ['HADOOP_CONF_DIR'] = '/etc/hadoop/conf'
 os.environ['YARN_CONF_DIR'] = '/etc/hadoop/conf'
 os.environ['JAVA_HOME'] = '/usr'
@@ -14,12 +13,10 @@ os.environ['SPARK_HOME'] = '/usr/lib/spark'
 os.environ['PYTHONPATH'] = '/usr/local/lib/python3'
 os.environ['PYTHONPATH'] = os.pathsep.join([os.environ['PYTHONPATH'], '/lessons/']) 
 
-#Input / Output Paths
 imput_events_path = "/user/kotlyarovb/sm_data_lake_project/staging/events"
 input_geo_path = "/user/kotlyarovb/sm_data_lake_project/staging/geo"
 output_path = "/user/kotlyarovb/sm_data_lake_project/analytics"
 
-#DAG Definition
 @dag(
     dag_id="spark",
     default_args={
@@ -30,7 +27,6 @@ output_path = "/user/kotlyarovb/sm_data_lake_project/analytics"
     tags=['spark', 'hdfs', 'dm', 'sm_data_lake_project'],
 )
 
-#Task Definitions
 def create_datamarts_dag():
 
     @task(task_id='dm_users')
@@ -75,9 +71,6 @@ def create_datamarts_dag():
         spark_submit_dm_firends.execute(context={}) 
         return 'spark_submit_dm_firends_complete'
 
-    # Define task dependencies
     create_user_datamart() >> create_zones_datamart() >> create_friend_recommendations()
 
-
-# Instantiate the DAG
 dag = create_datamarts_dag()

@@ -2,7 +2,6 @@ import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 import logging
 
-# Setup Logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()

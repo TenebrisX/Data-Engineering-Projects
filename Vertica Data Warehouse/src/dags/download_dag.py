@@ -34,7 +34,6 @@ def fetch_s3_file(bucket: str, key: str):
         aws_secret_access_key=None 
     )
 
-    # Retrieve credentials from Airflow Connection
     try: 
         conn = BaseHook.get_connection('aws_s3') 
         aws_access_key_id = conn.login
@@ -42,7 +41,6 @@ def fetch_s3_file(bucket: str, key: str):
     except Exception as e:
         print(f"Error retrieving S3 credentials: {e}")
 
-    # Re-establish client with retrieved credentials
     s3_client = session.client(
         service_name='s3',
         endpoint_url='https://storage.yandexcloud.net',
@@ -58,9 +56,9 @@ def fetch_s3_file(bucket: str, key: str):
 
 bash_command_tmpl = """
 head /data/*.csv 
-"""  # Template for the Bash command 
+""" 
 
-@dag(schedule_interval=None,  # The DAG will not run on a schedule
+@dag(schedule_interval=None, 
      start_date=pendulum.parse('2022-07-13'),
      tags=['s3', 'csv', 'download'])
 def dag_get_data():
